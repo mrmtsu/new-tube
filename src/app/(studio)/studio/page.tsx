@@ -1,8 +1,18 @@
-const Page = () => {
+import { StudioView } from "@/app/modules/studio/ui/view/studio-view";
+import { DEFAULT_LIMIT } from "@/constants";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+
+const Page = async () => {
+  prefetch(
+    trpc.studio.getMany.infiniteQueryOptions({
+      limit: DEFAULT_LIMIT,
+    })
+  );
+
   return (
-    <div>
-      <h1>Studio</h1>
-    </div>
+    <HydrateClient>
+      <StudioView />
+    </HydrateClient>
   );
 };
 
