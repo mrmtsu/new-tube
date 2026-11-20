@@ -1,5 +1,10 @@
 import { VideoView } from "@/app/modules/studio/ui/views/video-view";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import {
+  getCategoriesQueryOptions,
+  getStudioQueryOptions,
+  HydrateClient,
+  prefetch,
+} from "@/trpc/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +15,8 @@ interface PageProps {
 const Page = async ({ params }: PageProps) => {
   const { videoId } = await params;
 
-  void prefetch(trpc.studio.getOne.queryOptions({ id: videoId }));
-  void prefetch(trpc.categories.getMany.queryOptions());
+  void prefetch(getStudioQueryOptions({ id: videoId }));
+  void prefetch(getCategoriesQueryOptions());
 
   return (
     <HydrateClient>

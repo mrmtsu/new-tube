@@ -1,10 +1,14 @@
 import { StudioView } from "@/app/modules/studio/ui/views/studio-view";
 import { DEFAULT_LIMIT } from "@/constants";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import {
+  getStudiosInfiniteQueryOptions,
+  HydrateClient,
+  prefetch,
+} from "@/trpc/server";
 
 const Page = async () => {
   prefetch(
-    trpc.studio.getMany.infiniteQueryOptions({
+    getStudiosInfiniteQueryOptions({
       limit: DEFAULT_LIMIT,
     })
   );
