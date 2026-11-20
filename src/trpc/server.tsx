@@ -1,14 +1,11 @@
 import "server-only"; // <-- ensure this file cannot be imported from the client
-import {
-  createTRPCOptionsProxy,
-  TRPCQueryOptions,
-} from "@trpc/tanstack-react-query";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { cache } from "react";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createTRPCContext } from "./init";
 import { makeQueryClient } from "./query-client";
 import { appRouter } from "./routers/_app";
 import { createTRPCClient, httpLink } from "@trpc/client";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 // IMPORTANT: Create a stable getter for the query client that
 //            will return the same client during the same request.
 export const getQueryClient = cache(makeQueryClient);
@@ -33,13 +30,68 @@ export function HydrateClient(props: { children: React.ReactNode }) {
     </HydrationBoundary>
   );
 }
-export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
-  queryOptions: T
-) {
+
+const categoriesQueryOptions = () =>
+  trpc.categories.getMany.queryOptions();
+type CategoriesQueryOptions = ReturnType<typeof categoriesQueryOptions>;
+
+export function getCategoriesQueryOptions() {
+  return {
+    kind: "categories",
+    queryOptions: categoriesQueryOptions(),
+  } satisfies { kind: "categories"; queryOptions: CategoriesQueryOptions };
+}
+
+const studioQueryOptions = (input: { id: string }) =>
+  trpc.studio.getOne.queryOptions(input);
+type StudioQueryOptions = ReturnType<typeof studioQueryOptions>;
+
+export function getStudioQueryOptions(input: { id: string }) {
+  return {
+    kind: "studio",
+    queryOptions: studioQueryOptions(input),
+  } satisfies { kind: "studio"; queryOptions: StudioQueryOptions };
+}
+
+const studiosInfiniteQueryOptions = (input: { limit: number }) =>
+  trpc.studio.getMany.infiniteQueryOptions(input);
+type StudiosInfiniteQueryOptions = ReturnType<
+  typeof studiosInfiniteQueryOptions
+>;
+
+export function getStudiosInfiniteQueryOptions(input: { limit: number }) {
+  return {
+    kind: "studios-infinite",
+    queryOptions: studiosInfiniteQueryOptions(input),
+  } satisfies {
+    kind: "studios-infinite";
+    queryOptions: StudiosInfiniteQueryOptions;
+  };
+}
+
+type QueryOptions =
+  | { kind: "categories"; queryOptions: CategoriesQueryOptions }
+  | { kind: "studio"; queryOptions: StudioQueryOptions }
+  | {
+      kind: "studios-infinite";
+      queryOptions: StudiosInfiniteQueryOptions;
+    };
+
+export function prefetch(queryOptions: QueryOptions) {
   const queryClient = getQueryClient();
-  if (queryOptions.queryKey[1]?.type === "infinite") {
-    void queryClient.prefetchInfiniteQuery(queryOptions as any);
-  } else {
-    void queryClient.prefetchQuery(queryOptions);
+  switch (queryOptions.kind) {
+    case "categories":
+      void queryClient.prefetchQuery(queryOptions.queryOptions);
+      break;
+    case "studio":
+      void queryClient.prefetchQuery(queryOptions.queryOptions);
+      break;
+    case "studios-infinite":
+      void queryClient.prefetchInfiniteQuery(queryOptions.queryOptions);
+      break;
+    default: {
+      const _exhaustive: never = queryOptions;
+      return _exhaustive;
+    }
   }
 }

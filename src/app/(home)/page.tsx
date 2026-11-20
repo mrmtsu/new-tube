@@ -1,4 +1,8 @@
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import {
+  getCategoriesQueryOptions,
+  HydrateClient,
+  prefetch,
+} from "@/trpc/server";
 import { HomeView } from "../modules/home/ui/views/home-view";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +16,7 @@ interface PageProps {
 const Home = async ({ searchParams }: PageProps) => {
   const { categoryId } = await searchParams;
 
-  prefetch(trpc.categories.getMany.queryOptions());
+  prefetch(getCategoriesQueryOptions());
 
   return (
     <HydrateClient>
